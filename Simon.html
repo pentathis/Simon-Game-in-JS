@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Simon</title>
+        <meta charset="UTF-8">
+        <meta name="description" content="Simon Game in JS">
+        <meta name="author" content="Kaustubh Kulkarni">
+
+        <style> /* using css to create the things on screen*/
+            body{ 
+                display: flex;
+                justify-content: center;   
+            }
+
+            .button-1{ 
+                height: 40px;
+                width: 100px;
+                align-self: center;
+                position:absolute;
+                top:10px;
+                cursor: pointer;
+                background-color: black;
+                font-size: larger;
+                font-family: Arial;
+                color:burlywood
+            }
+
+            .game-grid{
+                display: grid;
+                grid-template-columns:250px 250px;
+                grid-template-rows: 250px 250px;
+                grid-gap: 15px;
+                margin-top: 65px;
+                align-self: center;
+            }
+
+            .red{
+                background-color: rgb(71, 0, 0);
+                height: 250px;
+                width: 250px;
+            }
+            .green{
+                background-color: rgb(0, 66, 0);
+                height: 250px;
+                width: 250px;
+            }
+            .yellow{
+                background-color: rgb(143, 143, 0);
+                height: 250px;
+                width: 250px;
+            }
+            .blue{
+                background-color: rgb(0, 0, 41);
+                height: 250px;
+                width: 250px;
+            }
+
+            .status{
+                position: absolute;    
+                top: 15px;
+                left: 900px;
+                text-align: right;
+                color: deeppink;
+                font-size: 25px;
+                font-family: Arial;
+            }
+
+            #numSelector{
+                height: 30px;
+                width: 50px;
+                position: absolute;    
+                top: 10px;
+                left: 500px;        
+                background-color: aquamarine;  
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <button class="button-1" onclick=startGame()>Start</button>
+        <div class="game-grid">
+            <div class="red"></div>
+            <div class="green"></div>
+            <div class="yellow"></div>
+            <div class="blue"></div>
+        </div>
+        <div class = status></div>
+        <select id = "numSelector"></select>
+
+        <script>
+
+            // HTML ELEMENTS
+            const redCode = document.querySelector(".red");
+            const greenCode = document.querySelector(".green");
+            const yellowCode = document.querySelector(".yellow");
+            const blueCode = document.querySelector(".blue");
+            const numSelector = document.getElementById("numSelector");
+            const statusDiv = document.querySelector(".status")
+
+            // Game constants
+            const COLOR_LIST_HIGH = ["red", "green", "yellow", "blue"];
+            const COLOR_LIST_DULL = ["rgb(71, 0, 0)", "rgb(0, 66, 0)", "rgb(143, 143, 0)", "rgb(0, 0, 41)"];
+            const codeList = [redCode, greenCode, yellowCode, blueCode];
+
+            // Game variables
+            var code = [];
+            var codeNum = numSelector.value;
+            var colorNumList = [];
+            var ansNum = 0;
+            var done = false;
+            var doing = false;
+
+            // set up dropdown list
+            for (var i = 3; i<=20; i++){
+                let option = document.createElement("option");
+                option.text = i;
+                numSelector.add(option)
+            };
+
+            // setup status div
+            statusDiv.innerHTML = "Click Start To Begin";
+
+            // sleep function
+            const sleep = ms => {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            };
+
+            // change cursor shape
+            const changeCursorShape = _ => {
+                if (done){
+                        for (var i =0; i < codeList.length; i++){
+                            codeList[i].style.cursor = "pointer";
+                        };
+                    }else{
+                        for (var i =0; i < codeList.length; i++){
+                            codeList[i].style.cursor = "auto";
+                        };
+                    };
+            };
+
+            // code setup function
+            const setUpCode = _ => {
+                done = false;
+                codeNum = numSelector.value;
+                code = [];
+                colorNumList = [];
+                let current = null;
+                ansNum = 0;
+                done = false;
+                for (var i = 0; i < codeNum; i++){
+                    ind = Math.floor(Math.random()*codeList.length);
+                    if (codeList[ind] != current){
+                    code.push(codeList[ind]);
+                        switch (codeList[ind]){
+                            case redCode:
+                            colorNumList.push(0);
+                            break;
+                            case greenCode:
+                            colorNumList.push(1);
+                            break;
+                            case yellowCode:
+                            colorNumList.push(2);
+                            break;
+                            case blueCode:
+                            colorNumList.push(3);
+                            break;
+                        };
+                    current = codeList[ind];
+                    } else {i--};
+                };
+                //console.log(code);
+                //console.log(colorNumList);
+            };
+
+            // Set Up Event Listener
+            redCode.addEventListener("mousedown", function(){checkAns(redCode)});
+            greenCode.addEventListener("mousedown", function(){checkAns(greenCode)});
+            yellowCode.addEventListener("mousedown", function(){checkAns(yellowCode)});
+            blueCode.addEventListener("mousedown", function(){checkAns(blueCode)});
+
+            // check answer function
+            const checkAns = async ans => {
+                if (done && ansNum<code.length){
+                    if (ans == code[ansNum]){
+                        if (ansNum == code.length -1){
+                            ansNum += 1;
+                            // light up all lights
+                            for (var i = 0; i < codeList.length; i++){
+                                codeList[i].style.backgroundColor = COLOR_LIST_HIGH[i];
+                            };
+                            statusDiv.innerHTML = "You Won!";
+                            changeCursorShape();
+                            await sleep(2000);
+                            if (!doing){statusDiv.innerHTML = "Click Start To Begin";};
+                            for (var i = 0; i < codeList.length; i++){
+                                codeList[i].style.backgroundColor = COLOR_LIST_DULL[i];
+                            };
+                            done = false;
+                        } else{
+                            // light up
+                            code[ansNum].style.backgroundColor = COLOR_LIST_HIGH[colorNumList[ansNum]];
+                            if(ansNum!=0){code[ansNum-1].style.backgroundColor = COLOR_LIST_DULL[colorNumList[ansNum-1]];};
+                            ansNum += 1;
+                            statusDiv.innerHTML = "Hm..."
+                        };
+                    } else {
+                        statusDiv.innerHTML = "Wrong! You Lost!";
+                        changeCursorShape();
+                        for (var i = 0; i < codeList.length; i++){
+                                codeList[i].style.backgroundColor = COLOR_LIST_DULL[i];
+                            };
+                        await sleep(2000);
+                        if (!doing){statusDiv.innerHTML = "Click Start To Begin";};
+                        done = false;
+                    };
+                };
+            };
+
+            // Main Game Function
+            const startGame = async _ => {
+                if (!doing && !done){
+                    doing = true;
+                    setUpCode();
+                    statusDiv.innerHTML = "Remember This Code...";
+                    for (var i = 0; i <= code.length-1; i++){
+                        code[i].style.backgroundColor = COLOR_LIST_HIGH[colorNumList[i]];
+                        await sleep(1000);
+                        code[i].style.backgroundColor = COLOR_LIST_DULL[colorNumList[i]];
+                    };
+                    statusDiv.innerHTML = "Start Answering...";
+                    doing = false;
+                    done = true;
+                    changeCursorShape();
+                };
+            };    
+        </script>     
+    </body>
+</html>
